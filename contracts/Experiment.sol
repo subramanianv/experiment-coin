@@ -15,7 +15,7 @@ import "./StandardToken.sol";
 
 pragma solidity ^0.4.8;
 
-contract Experiment is StandardToken {
+contract Experiment is ReleasableToken {
 
     /* Public variables of the token */
 
