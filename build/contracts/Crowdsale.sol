@@ -7,12 +7,25 @@ contract Crowdsale {
 	StandardToken ERC20;
 	address benefitiary;
 	uint experimentCoins;
+	uint from;
+	uint to;
+	uint weiRaised;
+
+	modifier isCrowdsaleOpen(current) { 
+		if(current > to || current < from) {
+			throw;
+		}
+		_ ;
+	}
+	
 
 	//constructor
-	function Crowdsale(address ERC20Address, address _benefitiary ){
+	function Crowdsale(address ERC20Address, address _benefitiary, uint _from, uint _to) {
 
 		token = StandardToken(ERC20Address);
 		benefitiary = _benefitiary;
+		from = _from;
+		to = _to;
 	}
 
 	function calculatePrice(uint weiSent ) constant returns (uint){
@@ -23,11 +36,13 @@ contract Crowdsale {
 	}
 
 	//send amount of experiment coins to a contributor who donated ETH
-	function contribute() payable {
+	function contribute() isCrowdsaleOpen(now) payable {
 
 		uint numTokens = 1; //any ETH contibution will send 1 experiment-coin token
 		token.transferFrom(benefitiary, msg.sender, numTokens);
+		weiRaised += msg.value;
 	}
+
 
 
 
