@@ -17,8 +17,8 @@ contract Crowdsale {
   function Crowdsale (address _tokenAddress,
     uint _startTime,
     uint _endTime,
-    uint _hardCap,
     uint _softCap,
+    uint _hardCap,
     address _beneficiary,
     address _multiSig) {
 
@@ -34,6 +34,11 @@ contract Crowdsale {
   }
 
   function contribute() public {
+
+  }
+
+  function refund() public {
+
   }
 
   function() payable {
