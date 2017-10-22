@@ -9,7 +9,7 @@ module.exports = function(deployer) {
   var multiSig = "0x40DA434B0d32BD04896c6723E41E4c9840d36342";
   deployer.deploy(HumanStandardToken, 500000000, "DREAM", 18, "DREAM")
   .then(function () {
-    return deployer.deploy(HumanStandardToken.address, startTime, endTime, hardCap, softCap, beneficiary, multiSig)
+    return deployer.deploy(Crowdsale, HumanStandardToken.address, startTime, endTime, softCap, hardCap, beneficiary, multiSig)
   }).then(function() {
     console.log("Done deploying");
   });
