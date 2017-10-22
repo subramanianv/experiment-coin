@@ -1,0 +1,22 @@
+{
+  "name": "experiment-coin",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/subramanianv/experiment-coin.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/subramanianv/experiment-coin/issues"
+  },
+  "homepage": "https://github.com/subramanianv/experiment-coin#readme",
+  "dependencies": {
+    "truffle": "^3.4.11"
+  }
+}
