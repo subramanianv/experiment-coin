@@ -25,7 +25,7 @@ contract Crowdsale is Ownable {
     address _beneficiary,
     address _wallet) {
 
-    require(_startTime > 0 && _startTime >= now);
+    require(_startTime >= now);
     require(_endTime > _startTime);
     require(_hardCap > _softCap && _softCap > 0);
     require(_beneficiary != address(0));
@@ -37,7 +37,6 @@ contract Crowdsale is Ownable {
     hardCap = _hardCap;
     wallet = _wallet;
     beneficiary = _beneficiary;
-
   }
 
   function contribute()  public payable {
