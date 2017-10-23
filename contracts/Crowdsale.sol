@@ -6,13 +6,13 @@ import "./Ownable.sol";
 contract Crowdsale is Ownable {
   using SafeMath for uint256;
   StandardToken public token;
-  uint public startTime;
-  uint public endTime;
+  uint256 public startTime;
+  uint256 public endTime;
   uint256 public hardCap;
   uint256 public softCap;
   address public wallet;
   address public beneficiary;
-  uint public weiRaised;
+  uint256 public weiRaised;
   mapping(address => uint256) public deposited;
 
 
@@ -25,7 +25,7 @@ contract Crowdsale is Ownable {
     address _beneficiary,
     address _wallet) {
 
-    require(_startTime > 0 && _startTime >=now);
+    require(_startTime > 0 && _startTime >= now);
     require(_endTime > _startTime);
     require(_hardCap > _softCap && _softCap > 0);
     require(_beneficiary != address(0));
@@ -40,21 +40,20 @@ contract Crowdsale is Ownable {
 
   }
 
-
   function contribute()  public payable {
-    require(validPurchase());
     uint256 value = msg.value;
+    require(validPurchase(msg.value));
     uint256 tokenForOneETH = 2000;
     uint256 rate = tokenForOneETH.div(10**18);
     uint256 numTokens = rate.mul(value);
     weiRaised = weiRaised.add(msg.value);
-    deposited[msg.sender] += msg.value;
+    uint256 currentContribution = deposited[msg.sender];
+    deposited[msg.sender] = currentContribution.add(msg.value);
     require(token.transferFrom(beneficiary, msg.sender, numTokens));
-
   }
 
   function refund() public {
-    require(hasEnded());
+    require(!inOperation());
     require(!goalReached());
     address investor = msg.sender;
     require(deposited[investor] > 0);
@@ -63,9 +62,9 @@ contract Crowdsale is Ownable {
     investor.transfer(depositedValue);
   }
 
-  function validPurchase() returns(bool) {
-    bool withinReached = weiRaised.add(msg.value) <= hardCap;
-    return !hasEnded() && !withinReached;
+  function validPurchase(uint256 value) internal returns(bool) {
+    bool withinCap = weiRaised.add(value) <= hardCap;
+    return inOperation() && withinCap;
   }
 
   function() payable {
@@ -74,17 +73,14 @@ contract Crowdsale is Ownable {
 
   function finalizeCrowdsale() onlyOwner {
     require(goalReached());
-    require(!hasEnded());
+    require(!inOperation() || weiRaised >= hardCap);
     wallet.transfer(this.balance);
   }
 
-  function hasEnded() public constant returns(bool) {
-    return now > hasEnded;
+  function inOperation() public constant returns(bool) {
+    return now >= startTime && now <= endTime;
   }
 
-  function hardCapReached() public constant returns(bool) {
-    return weiRaised >= hardCap;
-  }
   function goalReached() public constant returns(bool) {
     return weiRaised >= softCap;
   }
