@@ -43,8 +43,8 @@ contract Crowdsale is Ownable {
     uint256 value = msg.value;
     require(validPurchase(msg.value));
     uint256 tokenForOneETH = 2000;
-    uint256 rate = tokenForOneETH.div(10**18);
-    uint256 numTokens = rate.mul(value);
+    uint256 numTokens = tokenForOneETH.mul(value);
+    numTokens =  numTokens.div(10**18);
     weiRaised = weiRaised.add(msg.value);
     uint256 currentContribution = deposited[msg.sender];
     deposited[msg.sender] = currentContribution.add(msg.value);
@@ -82,5 +82,9 @@ contract Crowdsale is Ownable {
 
   function goalReached() public constant returns(bool) {
     return weiRaised >= softCap;
+  }
+
+  function getContributionAmount(address contributor) public constant returns(uint256) {
+    return deposited[contributor];
   }
 }
