@@ -13,20 +13,25 @@ contract Crowdsale is Ownable {
   address public wallet;
   address public beneficiary;
   uint256 public weiRaised;
+  uint256 public TOKEN_FOR_ONE_ETH = 2000;
   mapping(address => uint256) public deposited;
-
+  event tokensPurchased(address, uint, uint);
 
 
   function Crowdsale (address _tokenAddress,
     uint _startTime,
-    uint _endTime,
+    uint duration,
     uint256 _softCap,
     uint256 _hardCap,
     address _beneficiary,
     address _wallet) {
 
     require(_startTime >= now);
-    require(_endTime > _startTime);
+    startTime = _startTime;
+    /*require(duration > 0);*/
+    uint _endTime = _startTime + (duration * 1 days);
+
+
     require(_hardCap > _softCap && _softCap > 0);
     require(_beneficiary != address(0));
     require(_wallet != address(0));
@@ -39,16 +44,18 @@ contract Crowdsale is Ownable {
     beneficiary = _beneficiary;
   }
 
-  function contribute()  public payable {
+  function contribute()  public payable returns (uint256) {
     uint256 value = msg.value;
     require(validPurchase(msg.value));
-    uint256 tokenForOneETH = 2000;
-    uint256 numTokens = tokenForOneETH.mul(value);
+    uint256 numTokens = value.mul(TOKEN_FOR_ONE_ETH);
     numTokens =  numTokens.div(10**18);
     weiRaised = weiRaised.add(msg.value);
     uint256 currentContribution = deposited[msg.sender];
     deposited[msg.sender] = currentContribution.add(msg.value);
+    require(token.balanceOf(beneficiary) >= numTokens);
     require(token.transferFrom(beneficiary, msg.sender, numTokens));
+
+    return numTokens;
   }
 
   function refund() public {
@@ -77,7 +84,7 @@ contract Crowdsale is Ownable {
   }
 
   function inOperation() public constant returns(bool) {
-    return now >= startTime && now <= endTime;
+    return now>=startTime && now<=endTime;
   }
 
   function goalReached() public constant returns(bool) {
