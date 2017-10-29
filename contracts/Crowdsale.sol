@@ -28,7 +28,7 @@ contract Crowdsale is Ownable {
 
     require(_startTime >= now);
     startTime = _startTime;
-    /*require(duration > 0);*/
+    require(duration > 0);
     uint _endTime = _startTime + (duration * 1 days);
 
 
