@@ -14,10 +14,28 @@ contract Crowdsale is Ownable, Pausable {
   address public wallet;
   address public beneficiary;
   uint256 public weiRaised;
+  uint256 public tokenSold = 0;
   uint256 public TOKEN_FOR_ONE_ETH = 2000;
+
+  mapping(address => uint) public whitelist;
 
   mapping(address => uint256) public deposited;
   event TokensPurchased(address indexed _to, uint256 _tokens);
+
+  modifier beforeCrowdsale() {
+    require(now < startTime);
+    _;
+  }
+
+  modifier afterCrowdsale() {
+    require(this.balance >= hardCap || now > endTime);
+    _;
+  }
+
+  modifier duringCrowdsale() {
+    require(this.balance < hardCap && now >=startTime && now <=endTime);
+    _;
+  }
 
   function Crowdsale (address _tokenAddress,
     uint _startTime,
@@ -40,22 +58,27 @@ contract Crowdsale is Ownable, Pausable {
     beneficiary = _beneficiary;
   }
 
-  function contribute()  whenNotPaused public payable returns (uint256) {
-    uint256 value = msg.value;
-    require(validPurchase(msg.value));
+  function calculateTokensForContribution(uint256 value) internal returns(uint256) {
     uint256 numTokens = value.mul(TOKEN_FOR_ONE_ETH);
-    numTokens =  numTokens.div(10**18);
+    numTokens = numTokens.div(10**18);
+    return numTokens;
+  }
+
+  function contribute()  whenNotPaused duringCrowdsale public payable returns (uint256) {
+    uint256 value = msg.value;
+    require(validPurchase(value));
+    uint256 numTokens = calculateTokensForContribution(value);
     weiRaised = weiRaised.add(msg.value);
     uint256 currentContribution = deposited[msg.sender];
     deposited[msg.sender] = currentContribution.add(msg.value);
+    tokenSold = tokenSold.add(numTokens);
     require(token.balanceOf(beneficiary) >= numTokens);
     require(token.transferFrom(beneficiary, msg.sender, numTokens));
     TokensPurchased(msg.sender, numTokens);
     return numTokens;
   }
 
-  function refund(address investor) onlyOwner whenNotPaused public {
-    require(!inOperation());
+  function refund(address investor) afterCrowdsale onlyOwner whenNotPaused public {
     require(!goalReached());
     require(deposited[investor] > 0);
     uint256 depositedValue = deposited[investor];
@@ -63,23 +86,25 @@ contract Crowdsale is Ownable, Pausable {
     investor.transfer(depositedValue);
   }
 
+  function addInvestorToWhitelist(address[] investors, uint[] tiers) beforeCrowdsale public {
+    require(investors.length == tiers.length);
+    for(uint i=0;i<investors.length;i++) {
+      whitelist[investors[i]] = tiers[i];
+    }
+  }
+
   function validPurchase(uint256 value) internal returns(bool) {
     bool withinCap = weiRaised.add(value) <= hardCap;
-    return inOperation() && withinCap;
+    return withinCap;
   }
 
   function() payable {
     contribute();
   }
 
-  function finalizeCrowdsale() whenNotPaused onlyOwner public {
+  function finalizeCrowdsale() whenNotPaused afterCrowdsale onlyOwner public {
     require(goalReached());
-    require(!inOperation() || weiRaised >= hardCap);
     wallet.transfer(this.balance);
-  }
-
-  function inOperation() public constant returns(bool) {
-    return now>=startTime && now<=endTime;
   }
 
   function goalReached() public constant returns(bool) {
